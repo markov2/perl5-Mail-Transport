@@ -1,0 +1,12 @@
+ChangeLog
+MANIFEST
+Makefile.PL
+lib/Mail/Transport.pm
+lib/Mail/Transport/Exim.pm
+lib/Mail/Transport/Mailx.pm
+lib/Mail/Transport/Qmail.pm
+lib/Mail/Transport/Receive.pm
+lib/Mail/Transport/SMTP.pm
+lib/Mail/Transport/Send.pm
+lib/Mail/Transport/Sendmail.pm
+t/001use.t
