@@ -1,6 +1,7 @@
 ChangeLog
 MANIFEST
 Makefile.PL
+README.md
 lib/Mail/Transport.pm
 lib/Mail/Transport/Exim.pm
 lib/Mail/Transport/Mailx.pm

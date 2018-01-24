@@ -1,15 +1,19 @@
-use strict;
-use warnings;
+# This code is part of distribution Mail-Transport.  Meta-POD processed with
+# OODoc into POD and HTML manual-pages.  See README.md
+# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
 
 package Mail::Transport;
 use base 'Mail::Reporter';
+
+use strict;
+use warnings;
 
 use Carp;
 use File::Spec;
 
 =chapter NAME
 
-Mail::Transport - base class for message exchange
+Mail::Transport - use Mail Transfer Agents (MTAs)
 
 =chapter SYNOPSIS
 
