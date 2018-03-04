@@ -11,3 +11,4 @@ lib/Mail/Transport/SMTP.pm
 lib/Mail/Transport/Send.pm
 lib/Mail/Transport/Sendmail.pm
 t/001use.t
+xt/99pod.t
