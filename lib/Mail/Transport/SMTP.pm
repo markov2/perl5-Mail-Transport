@@ -113,15 +113,19 @@ sub init($)
 
 =method trySend $message, %options
 Try to send the $message once.   This may fail, in which case this
-method will return C<false>.  In list context, the reason for failure
-can be caught: in list context C<trySend> will return a list of
-five values:
+method will return C<false>.
+
+In LIST context, the reason for failure can be caught: in list context
+C<trySend> will return a list of five or six values.  At least these five:
 
  (success, error code, error text, error location, quit success)
 
 Success and quit success are booleans.  The error code and -text are
 protocol specific codes and texts.  The location tells where the
 problem occurred.
+
+When the data-end is sent, its message will be returned as sixth value
+in the list.  You may be able to pick the message-id from it.
 
 =option  to ADDRESS|[ADDRESSES]
 =default to []
@@ -208,8 +212,9 @@ sub trySend($@)
         return (0, $server->code, $server->message, 'DATA', $server->quit)
             unless $server->dataend;
 
+        my $endmsg = $server->message;
         return ($server->quit, $server->code, $server->message, 'QUIT',
-                $server->code);
+                $server->code, $endmsg);
     }
 
     # in SCALAR context
