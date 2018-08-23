@@ -9,6 +9,7 @@ version 3.003:
 	Fixes:
 	- fix metadata [Mohammad S Anwar]
 	- add pod testing
+	- use of NetConfig
 
 	Improvements:
 	- return dataend() message to ::SMTP::trySend(), which may contain

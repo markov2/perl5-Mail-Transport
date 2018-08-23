@@ -99,7 +99,7 @@ sub init($)
     $self->SUPER::init($args) or return;
 
     my $helo = $args->{helo}
-      || eval { require Net::Config; $Net::Config::inet_domain }
+      || eval { require Net::Config; $Net::Config::NetConfig{inet_domain} }
       || eval { require Net::Domain; Net::Domain::hostfqdn() };
 
     $self->{MTS_net_smtp_opts} =
