@@ -113,19 +113,21 @@ sub init($)
 
 =method trySend $message, %options
 Try to send the $message once.   This may fail, in which case this
-method will return C<false>.
+method will return C<false>.  In list context, the reason for failure
+can be caught: in list context C<trySend> will return a list of
+six values:
 
-In LIST context, the reason for failure can be caught: in list context
-C<trySend> will return a list of five or six values.  At least these five:
-
- (success, error code, error text, error location, quit success)
+ (success, rc, rc-text, error location, quit success, accept)
 
 Success and quit success are booleans.  The error code and -text are
 protocol specific codes and texts.  The location tells where the
 problem occurred.
 
-When the data-end is sent, its message will be returned as sixth value
-in the list.  You may be able to pick the message-id from it.
+[3.003] the 'accept' returns the message of the L<dataend()> instruction.
+Some servers may provide useful information in there, like an internal
+message registration id.  For example, postfix may return "2.0.0 Ok:
+queued as 303EA380EE".  You can only use this parameter when running
+local delivery (which is a smart choice anyway)
 
 =option  to ADDRESS|[ADDRESSES]
 =default to []
@@ -162,13 +164,12 @@ sub trySend($@)
     my $from = $args{from} || $self->{MTS_from} || $message->sender || '<>';
     $from = $from->address if ref $from && $from->isa('Mail::Address');
 
-    # Who are the destinations.
-    if(defined $args{To})
-    {   $self->log(WARNING =>
-   "Use option `to' to overrule the destination: `To' would refer to a field");
-    }
+    # Which are the destinations.
+    ! defined $args{To}
+        or $self->log(WARNING =>
+   "Use option `to' to overrule the destination: `To' refers to a field");
 
-    my @to = map {$_->address} $self->destinations($message, $args{to});
+    my @to = map $_->address, $self->destinations($message, $args{to});
 
     unless(@to)
     {   $self->log(NOTICE =>
@@ -177,9 +178,9 @@ sub trySend($@)
     }
 
     # Prepare the header
-    my @header;
+    my @headers;
     require IO::Lines;
-    my $lines = IO::Lines->new(\@header);
+    my $lines = IO::Lines->new(\@headers);
     $message->head->printUndisclosed($lines);
 
     #
@@ -203,18 +204,24 @@ sub trySend($@)
         }
 
         $server->data;
-        $server->datasend($_) foreach @header;
+        $server->datasend($_) for @headers;
         my $bodydata = $message->body->file;
 
-        if(ref $bodydata eq 'GLOB') { $server->datasend($_) while <$bodydata> }
-        else    { while(my $l = $bodydata->getline) { $server->datasend($l) } }
+        if(ref $bodydata eq 'GLOB') {
+            $server->datasend($_) while <$bodydata>;
+        }
+        else {
+            while(my $l = $bodydata->getline) { $server->datasend($l) }
+        }
 
-        return (0, $server->code, $server->message, 'DATA', $server->quit)
-            unless $server->dataend;
+        $server->dataend
+            or return (0, $server->code, $server->message,'DATA',$server->quit);
 
-        my $endmsg = $server->message;
-        return ($server->quit, $server->code, $server->message, 'QUIT',
-                $server->code, $endmsg);
+        my $accept = ($server->message)[-1];
+        chomp $accept;
+
+		my $rc     = $server->quit;
+        return ($rc, $server->code, $server->message, 'QUIT', $rc, $accept);
     }
 
     # in SCALAR context
@@ -234,7 +241,7 @@ sub trySend($@)
     }
 
     $server->data;
-    $server->datasend($_) foreach @header;
+    $server->datasend($_) for @headers;
     my $bodydata = $message->body->file;
 
     if(ref $bodydata eq 'GLOB') { $server->datasend($_) while <$bodydata> }
