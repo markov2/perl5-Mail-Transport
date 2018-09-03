@@ -75,7 +75,7 @@ RAWDIR          = ../public_html/mail-transport/raw
 DISTDIR         = ../public_html/mail-transport/source
 
 LICENSE         = perl
-EXTENDS			= ../Mail-Message:../../perl/MailPOP:../Mail-Box-IMAP4
+EXTENDS			= ../Mail-Message:../Mail-Box-POP3:../Mail-Box-IMAP4
 
 # for POD
 FIRST_YEAR      = 2001
