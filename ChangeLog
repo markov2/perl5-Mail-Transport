@@ -4,6 +4,8 @@
 All changes are made by Mark Overmeer <markov@cpan.org> unless
 explicitly stated differently.
 
+version 3.004:
+
 version 3.003: Mon  3 Sep 08:16:23 CEST 2018
 
 	Fixes:
