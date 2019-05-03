@@ -6,6 +6,9 @@ explicitly stated differently.
 
 version 3.004:
 
+	Improvements:
+	- add imap/imap4
+
 version 3.003: Mon  3 Sep 08:16:23 CEST 2018
 
 	Fixes:

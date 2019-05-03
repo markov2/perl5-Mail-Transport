@@ -46,6 +46,8 @@ protocols will implement both sending and receiving.
 
 my %mailers =
  ( exim     => '::Exim'
+ , imap     => '::IMAP4'
+ , imap4    => '::IMAP4'
  , mail     => '::Mailx'
  , mailx    => '::Mailx'
  , pop      => '::POP3'
@@ -102,8 +104,11 @@ Which CLASS (extending C<Mail::Transport>) will transport the data.
 Some predefined NAMEs avoid long class names: C<mail> and C<mailx>
 are handled by the M<Mail::Transport::Mailx> module, C<sendmail>
 and C<postfix> belong to M<Mail::Transport::Sendmail>, and C<smtp>
-is implemented in M<Mail::Transport::SMTP>.  The C<pop> or C<pop3>
-protocol implementation can be found in M<Mail::Transport::POP3>.
+is implemented in M<Mail::Transport::SMTP>.
+
+The C<pop> or C<pop3> protocol implementation can be found distribution
+M<Mail::Transport::POP3>.  For C<imap> or C<imap4>, install
+M<Mail::Transport::IMAP4>.
 
 =option  executable FILENAME
 =default executable C<undef>
