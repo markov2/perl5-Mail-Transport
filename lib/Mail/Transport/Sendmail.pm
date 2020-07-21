@@ -29,6 +29,14 @@ Some people use Postfix as MTA.  Postfix can be installed as replacement
 for Sendmail: is provides a program with the same name and options.  So,
 this module supports postfix as well.
 
+B<WARNING:> When you do bulk email sending with local delivery via
+Postfix, you can probably better use the SMTP backend to connect
+to postfix.  The C<sendmail> command delivers to C<maildrop>.  From
+C<maildrop>, the C<pickupd> will only sequentially insert messages
+into C<cleanup>.  That process can take considerable elapse time.
+Directly inserting via C<smtpd> will parallellize the cleanup process.
+
+
 =chapter METHODS
 
 =c_method new %options
