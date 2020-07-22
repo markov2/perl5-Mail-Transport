@@ -203,17 +203,11 @@ sub trySend($@)
               return (0, $server->code, $server->message,"To $_",$server->quit);
         }
 
-        $server->data;
-        $server->datasend($_) for @headers;
         my $bodydata = $message->body->file;
 
-        if(ref $bodydata eq 'GLOB') {
-            $server->datasend($_) while <$bodydata>;
-        }
-        else {
-            while(my $l = $bodydata->getline) { $server->datasend($l) }
-        }
-
+        $server->data;
+        $server->datasend(\@headers);
+        $server->datasend( [ ref $bodydata eq 'GLOB' ? <$bodydata> : $bodydata->getlines ] );
         $server->dataend
             or return (0, $server->code, $server->message,'DATA',$server->quit);
 
@@ -240,12 +234,11 @@ sub trySend($@)
           return 0;
     }
 
-    $server->data;
-    $server->datasend($_) for @headers;
     my $bodydata = $message->body->file;
 
-    if(ref $bodydata eq 'GLOB') { $server->datasend($_) while <$bodydata> }
-    else    { while(my $l = $bodydata->getline) { $server->datasend($l) } }
+    $server->data;
+    $server->datasend(\@headers);
+    $server->datasend( [ ref $bodydata eq 'GLOB' ? <$bodydata> : $bodydata->getlines ] );
 
     $server->quit, return 0
         unless $server->dataend;
