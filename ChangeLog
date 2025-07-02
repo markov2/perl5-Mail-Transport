@@ -6,6 +6,9 @@ explicitly stated differently.
 
 version 3.006:
 
+	Improvements:
+	- ::SMTP 30% faster, 73% less computer power
+
 version 3.005: Wed 22 Jul 10:40:05 CEST 2020
 
 	Improvements:

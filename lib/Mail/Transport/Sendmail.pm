@@ -87,8 +87,9 @@ sub trySend($@)
 
     my $program = $self->{MTS_program};
     if(open(MAILER, '|-')==0)
-    {   my $options = $args{sendmail_options} || [];
-        my @to = map {$_->address} $self->destinations($message, $args{to});
+    {   # Child process is sendmail binary
+        my $options = $args{sendmail_options} || [];
+        my @to = map $_->address, $self->destinations($message, $args{to});
 
         # {} to avoid warning about code after exec
         {  exec $program, '-i', @{$self->{MTS_opts}}, @$options, @to; }
@@ -97,6 +98,7 @@ sub trySend($@)
         exit 1;
     }
  
+    # Parent process is the main program, still
     $self->putContent($message, \*MAILER, undisclosed => 1);
 
     unless(close MAILER)

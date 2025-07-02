@@ -9,6 +9,7 @@ use strict;
 use warnings;
 
 use Net::SMTP;
+use constant CMD_OK      => 2;
 
 =chapter NAME
 
@@ -166,84 +167,85 @@ sub trySend($@)
 
     # Which are the destinations.
     ! defined $args{To}
-        or $self->log(WARNING =>
-   "Use option `to' to overrule the destination: `To' refers to a field");
+        or $self->log(WARNING => "Use option `to' to overrule the destination: `To' refers to a field");
 
     my @to = map $_->address, $self->destinations($message, $args{to});
 
     unless(@to)
-    {   $self->log(NOTICE =>
-            'No addresses found to send the message to, no connection made');
+    {   $self->log(NOTICE => 'No addresses found to send the message to, no connection made');
         return 1;
     }
 
-    # Prepare the header
-    my @headers;
-    require IO::Lines;
-    my $lines = IO::Lines->new(\@headers);
-    $message->head->printUndisclosed($lines);
+    #### Prepare the message.
 
-    #
-    # Send
-    #
+    my $out = '';
+    open my $fh, '>:raw', \$out;
+    $self->putContent($message, $fh, undisclosed => 0);
+    close $fh;
 
+    #### Send
+
+    my $server;
     if(wantarray)
     {   # In LIST context
-        my $server;
-        return (0, 500, "Connection Failed", "CONNECT", 0)
-            unless $server = $self->contactAnyServer;
+        $server = $self->contactAnyServer
+            or return (0, 500, "Connection Failed", "CONNECT", 0);
 
-        return (0, $server->code, $server->message, 'FROM', $server->quit)
-            unless $server->mail($from, %send_options);
+        $server->mail($from, %send_options)
+            or return (0, $server->code, $server->message, 'FROM', $server->quit);
 
         foreach (@to)
         {     next if $server->to($_);
-# must we be able to disable this?
-# next if $args{ignore_erroneous_destinations}
-              return (0, $server->code, $server->message,"To $_",$server->quit);
+              #???  must we be able to disable this?  f.i:
+              #???     next if $args{ignore_erroneous_destinations}
+              return (0, $server->code, $server->message, "To $_", $server->quit);
         }
 
         my $bodydata = $message->body->file;
 
-        $server->data;
-        $server->datasend(\@headers);
-        $server->datasend( [ ref $bodydata eq 'GLOB' ? <$bodydata> : $bodydata->getlines ] );
-        $server->dataend
-            or return (0, $server->code, $server->message,'DATA',$server->quit);
+        $server->datafast(\$out)  #!! destroys $out
+            or return (0, $server->code, $server->message, 'DATA', $server->quit);
 
         my $accept = ($server->message)[-1];
         chomp $accept;
 
-		my $rc     = $server->quit;
+        my $rc     = $server->quit;
         return ($rc, $server->code, $server->message, 'QUIT', $rc, $accept);
     }
 
     # in SCALAR context
-    my $server;
-    return 0 unless $server = $self->contactAnyServer;
+    $server = $self->contactAnyServer
+        or return 0;
 
-    $server->quit, return 0
-        unless $server->mail($from, %send_options);
+    $server->mail($from, %send_options)
+        or ($server->quit, return 0);
 
     foreach (@to)
-    {
-          next if $server->to($_);
-# must we be able to disable this?
-# next if $args{ignore_erroneous_destinations}
-          $server->quit;
-          return 0;
+    {   next if $server->to($_);
+        $server->quit;
+        return 0;
     }
 
-    my $bodydata = $message->body->file;
-
-    $server->data;
-    $server->datasend(\@headers);
-    $server->datasend( [ ref $bodydata eq 'GLOB' ? <$bodydata> : $bodydata->getlines ] );
-
-    $server->quit, return 0
-        unless $server->dataend;
+    $server->datafast(\$out)  #!! destroys $out
+        or ($server->quit, return 0);
 
     $server->quit;
+}
+
+# Improvement on Net::CMD::datasend(), mainly bulk adding dots and avoiding copying
+# About 79% performance gain on huge messages.
+# Be warned: this method destructs the content of $data!
+sub Net::SMTP::datafast($)
+{   my ($self, $data) = @_;
+    $self->_DATA or return 0;
+
+    $$data =~ tr/\r\n/\015\012/ if "\r" ne "\015";  # mac
+    $$data =~ s/\015?\012/\015\012/g;  # \n -> crlf as sep.  Needed?
+    $$data =~ s/^\./../;         # data starts with a dot, escape it
+    $$data =~ s/\012\./\012../g; # other lines which start with a dot
+
+    $self->_syswrite_with_timeout($$data . ".\015\012");
+    $self->response == CMD_OK;
 }
 
 #------------------------------------------

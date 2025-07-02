@@ -109,12 +109,15 @@ sub send($@)
 
     unless($message->isa('Mail::Message'))  # avoid rebless.
     {   $message = Mail::Message->coerce($message);
-        confess "Unable to coerce object into Mail::Message."
-            unless defined $message;
+        defined $message
+            or confess "Unable to coerce object into Mail::Message.";
     }
 
-    return 1 if $self->trySend($message, %args);
-    return 0 unless $?==EAGAIN;
+    return 1
+        if $self->trySend($message, %args);
+
+    $?==EAGAIN
+        or return 0;
 
     my ($interval, $retry) = $self->retry;
     $interval = $args{interval} if exists $args{interval};
@@ -123,7 +126,7 @@ sub send($@)
     while($retry!=0)
     {   sleep $interval;
         return 1 if $self->trySend($message, %args);
-        return 0 unless $?==EAGAIN;
+        $?==EAGAIN or return 0;
         $retry--;
     }
 
@@ -220,19 +223,17 @@ sub destinations($;$)
     my @to;
 
     if(defined $overrule)      # Destinations overruled by user.
-    {   my @addr = ref $overrule eq 'ARRAY' ? @$overrule : ($overrule);
-        @to = map { ref $_ && $_->isa('Mail::Address') ? ($_)
-                    : Mail::Address->parse($_) } @addr;
+    {   @to = map { ref $_ && $_->isa('Mail::Address') ? ($_) : Mail::Address->parse($_) }
+            ref $overrule eq 'ARRAY' ? @$overrule : ($overrule);
     }
     elsif(my @rgs = $message->head->resentGroups)
-    {   @to = $rgs[0]->destinations;
-        $self->log(WARNING => "Resent group does not specify a destination"), return ()
-            unless @to;
+    {   # Create with bounce
+        @to = $rgs[0]->destinations;
+        @to or $self->log(WARNING => "Resent group does not specify a destination"), return ();
     }
     else
     {   @to = $message->destinations;
-        $self->log(WARNING => "Message has no destination"), return ()
-            unless @to;
+        @to or $self->log(WARNING => "Message has no destination"), return ();
     }
 
     @to;
