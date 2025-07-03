@@ -42,13 +42,11 @@ Implements the POP3 protocol.  See also M<Mail::Box::POP3>.
 Receive one message from the remote server.  Some receivers will provide
 the next message automatically, other are random access and use the
 specified ID.
-
 =cut
 
 sub receive(@) {shift->notImplemented}
 
 #------------------------------------------
-
 =section Server connection
 
 =section Error handling

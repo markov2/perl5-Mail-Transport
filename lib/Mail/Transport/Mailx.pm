@@ -57,17 +57,15 @@ distributions).
 
 sub init($)
 {   my ($self, $args) = @_;
-
     $args->{via} = 'mailx';
 
     $self->SUPER::init($args) or return;
 
-    $self->{MTM_program}
-      = $args->{proxy}
-     || $self->findBinary('mailx')
-     || $self->findBinary('Mail')
-     || $self->findBinary('mail')
-     || return;
+    $self->{MTM_program} = $args->{proxy}
+      || $self->findBinary('mailx')
+      || $self->findBinary('Mail')
+      || $self->findBinary('mail')
+      || return;
 
     $self->{MTM_style}
       = defined $args->{style}                       ? $args->{style}
@@ -77,15 +75,10 @@ sub init($)
     $self;
 }
 
-#------------------------------------------
-
 =method trySend $message, %options
-
 =error Sending via mailx mailer $program failed: $! ($?)
-
 Mailx (in some shape: there are many different implementations) did start
 accepting messages, but did not succeed sending it.
-
 =cut
 
 sub _try_send_bsdish($$)
@@ -94,33 +87,31 @@ sub _try_send_bsdish($$)
     my @options = ('-s' => $message->subject);
 
     {   local $" = ',';
-        my @cc  = map {$_->format} $message->cc;
+        my @cc  = map $_->format, $message->cc;
         push @options, ('-c' => "@cc")  if @cc;
 
-        my @bcc = map {$_->format} $message->bcc;
+        my @bcc = map $_->format, $message->bcc;
         push @options, ('-b' => "@bcc") if @bcc;
     }
 
-    my @to      = map {$_->format} $message->to;
+    my @to      = map $_->format, $message->to;
     my $program = $self->{MTM_program};
 
-    if((open MAILER, '|-')==0)
+    my $mailer;
+    if((open $mailer, '|-')==0)
     {   close STDOUT;
         { exec $program, @options, @to }
         $self->log(NOTICE => "Cannot start contact to $program: $!");
         exit 1;
     }
  
-    $self->putContent($message, \*MAILER, body_only => 1);
+    $self->putContent($message, $mailer, body_only => 1);
+
+    $mailer->close
+        or $self->log(ERROR => "Sending via mailx mailer $program failed: $! ($?)"), return 0;
 
     my $msgid = $message->messageId;
-
-    if(close MAILER) { $self->log(PROGRESS => "Message $msgid send.") }
-    else
-    {   $self->log(ERROR => "Sending via mailx mailer $program failed: $! ($?)");
-        return 0;
-    }
-
+    $self->log(PROGRESS => "Message $msgid send.");
     1;
 }
 
@@ -131,21 +122,15 @@ sub trySend($@)
         if $self->{MTM_style} eq 'BSD';
 
     my $program = $self->{MTM_program};
-    unless(open MAILER, '|-', $program, '-t')
-    {   $self->log(NOTICE => "Cannot start contact to $program: $!");
-        return 0;
-    }
+    open my $mailer, '|-', $program, '-t'
+        or $self->log(NOTICE => "Cannot start contact to $program: $!"), return 0;
  
-    $self->putContent($message, \*MAILER);
+    $self->putContent($message, $mailer);
 
-    unless(close MAILER)
-    {   $self->log(ERROR => "Sending via mailx mailer $program failed: $! ($?)");
-        return 0;
-    }
+    $mailer->close
+        or $self->log(ERROR => "Sending via mailx mailer $program failed: $! ($?)"), return 0;
 
     1;
 }
-
-#------------------------------------------
 
 1;

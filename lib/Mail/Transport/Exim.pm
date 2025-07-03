@@ -28,23 +28,19 @@ directories, and the first version found is taken.
 =chapter METHODS
 
 =c_method new %options
-
 If you have Exim installed in a non-standard location, you will need to 
 specify the path, using M<new(proxy)>.
 
 =default via C<'exim'>
-
 =cut
 
 sub init($)
 {   my ($self, $args) = @_;
-
     $args->{via} = 'exim';
 
     $self->SUPER::init($args) or return;
 
-    $self->{MTS_program}
-      = $args->{proxy}
+    $self->{MTS_program} = $args->{proxy}
      || ( -x '/usr/sbin/exim4' ? '/usr/sbin/exim4' : undef)
      || $self->findBinary('exim', '/usr/exim/bin')
      || return;
@@ -52,15 +48,10 @@ sub init($)
     $self;
 }
 
-#------------------------------------------
-
 =method trySend $message, %options
-
 =error Errors when closing Exim mailer $program: $!
-
 The Exim mail transfer agent did start, but was not able to handle the message
 correctly.
-
 =cut
 
 sub trySend($@)
@@ -68,18 +59,19 @@ sub trySend($@)
 
     my $from = $args{from} || $message->sender;
     $from    = $from->address if ref $from && $from->isa('Mail::Address');
-    my @to   = map {$_->address} $self->destinations($message, $args{to});
+    my @to   = map $_->address, $self->destinations($message, $args{to});
 
     my $program = $self->{MTS_program};
-    if(open(MAILER, '|-')==0)
+    my $mailer;
+    if(open($mailer, '|-')==0)
     {   { exec $program, '-i', '-f', $from, @to; }  # {} to avoid warning
         $self->log(NOTICE => "Errors when opening pipe to $program: $!");
         exit 1;
     }
 
-    $self->putContent($message, \*MAILER, undisclosed => 1);
+    $self->putContent($message, $mailer, undisclosed => 1);
 
-    unless(close MAILER)
+    unless($mailer->close)
     {   $self->log(ERROR => "Errors when closing Exim mailer $program: $!");
         $? ||= $!;
         return 0;
@@ -87,7 +79,5 @@ sub trySend($@)
 
     1;
 }
-
-#------------------------------------------
 
 1;

@@ -135,31 +135,22 @@ sub new(@)
     return $class->SUPER::new(@_)
         unless $class eq __PACKAGE__ || $class eq "Mail::Transport::Send";
 
-    #
     # auto restart by creating the right transporter.
-    #
 
-    my %args  = @_;
-    my $via   = lc($args{via} || '')
+    my %args = @_;
+    my $via  = lc($args{via} || '')
         or croak "No transport protocol provided";
 
-    $via      = 'Mail::Transport'.$mailers{$via}
-       if exists $mailers{$via};
-
+    $via     = 'Mail::Transport'.$mailers{$via} if exists $mailers{$via};
     eval "require $via";
-    return undef if $@;
-
-    $via->new(@_);
+    $@ ? undef : $via->new(@_);
 }
 
 sub init($)
 {   my ($self, $args) = @_;
-
     $self->SUPER::init($args);
 
-    $self->{MT_hostname}
-       = defined $args->{hostname} ? $args->{hostname} : 'localhost';
-
+    $self->{MT_hostname} = defined $args->{hostname} ? $args->{hostname} : 'localhost';
     $self->{MT_port}     = $args->{port};
     $self->{MT_username} = $args->{username};
     $self->{MT_password} = $args->{password};
@@ -171,13 +162,11 @@ sub init($)
     if(my $exec = $args->{executable} || $args->{proxy})
     {   $self->{MT_exec} = $exec;
 
-        $self->log(WARNING => "Avoid program abuse: specify an absolute path for $exec.")
-           unless File::Spec->file_name_is_absolute($exec);
+        File::Spec->file_name_is_absolute($exec)
+            or $self->log(WARNING => "Avoid program abuse: specify an absolute path for $exec.");
 
-        unless(-x $exec)
-        {   $self->log(WARNING => "Executable $exec does not exist.");
-            return undef;
-        }
+        -x $exec
+            or $self->log(WARNING => "Executable $exec does not exist."), return undef;
     }
 
     $self;
@@ -212,11 +201,9 @@ by the optional @directories.  The full pathname is returned.
 
 You may specify M<new(proxy)>, which specifies the absolute name
 of the binary to be used.
-
 =cut
 
-my @safe_directories
-   = qw(/usr/local/bin /usr/bin /bin /sbin /usr/sbin /usr/lib);
+my @safe_directories = qw(/usr/local/bin /usr/bin /bin /sbin /usr/sbin /usr/lib);
 
 sub findBinary($@)
 {   my ($self, $name) = (shift, shift);

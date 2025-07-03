@@ -53,22 +53,16 @@ because the latter will be taken by sendmail as one word only.
 
 sub init($)
 {   my ($self, $args) = @_;
-
     $args->{via} = 'sendmail';
 
     $self->SUPER::init($args) or return;
 
-    $self->{MTS_program}
-      = $args->{proxy}
-     || $self->findBinary('sendmail')
-     || return;
-
+    $self->{MTS_program} = $args->{proxy} || $self->findBinary('sendmail') || return;
     $self->{MTS_opts} = $args->{sendmail_options} || [];
     $self;
 }
 
 #------------------------------------------
-
 =section Sending mail
 
 =method trySend $message, %options
@@ -86,7 +80,8 @@ sub trySend($@)
 {   my ($self, $message, %args) = @_;
 
     my $program = $self->{MTS_program};
-    if(open(MAILER, '|-')==0)
+    my $mailer;
+    if(open($mailer, '|-')==0)
     {   # Child process is sendmail binary
         my $options = $args{sendmail_options} || [];
         my @to = map $_->address, $self->destinations($message, $args{to});
@@ -99,7 +94,7 @@ sub trySend($@)
     }
  
     # Parent process is the main program, still
-    $self->putContent($message, \*MAILER, undisclosed => 1);
+    $self->putContent($message, $mailer, undisclosed => 1);
 
     unless(close MAILER)
     {   $self->log(NOTICE => "Errors when closing sendmail mailer $program: $!");
@@ -109,7 +104,5 @@ sub trySend($@)
 
     1;
 }
-
-#------------------------------------------
 
 1;

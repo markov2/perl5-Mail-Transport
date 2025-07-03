@@ -85,6 +85,8 @@ See M<trySend()> for full details.
 
 sub init($)
 {   my ($self, $args) = @_;
+    $args->{via}  ||= 'smtp';
+    $args->{port} ||= '25';
 
     my $hosts   = $args->{hostname};
     unless($hosts)
@@ -94,19 +96,13 @@ sub init($)
         $args->{hostname} = $hosts;
     }
 
-    $args->{via}  ||= 'smtp';
-    $args->{port} ||= '25';
-
     $self->SUPER::init($args) or return;
 
     my $helo = $args->{helo}
       || eval { require Net::Config; $Net::Config::NetConfig{inet_domain} }
       || eval { require Net::Domain; Net::Domain::hostfqdn() };
 
-    $self->{MTS_net_smtp_opts} =
-     +{ Hello   => $helo
-      , Debug   => ($args->{smtp_debug} || 0)
-      };
+    $self->{MTS_net_smtp_opts} = +{ Hello => $helo, Debug => ($args->{smtp_debug} || 0) };
     $self->{MTS_esmtp_options} = $args->{esmtp_options};
     $self->{MTS_from}          = $args->{from};
     $self;
@@ -132,14 +128,12 @@ local delivery (which is a smart choice anyway)
 
 =option  to ADDRESS|[ADDRESSES]
 =default to []
-
 Alternative destinations.  If not specified, the C<To>, C<Cc> and C<Bcc>
 fields of the header are used.  An address is a string or a Mail::Address
 object.
 
 =option  from ADDRESS
 =default from E<lt> E<gt>
-
 Your own identification.  This may be fake.  If not specified, it is
 taken from M<Mail::Message::sender()>, which means the content of the
 C<Sender> field of the message or the first address of the C<From>

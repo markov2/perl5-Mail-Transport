@@ -82,7 +82,6 @@ sub new(@)
 }
 
 #------------------------------------------
-
 =section Sending mail
 
 =method send $message, %options
@@ -113,8 +112,8 @@ sub send($@)
             or confess "Unable to coerce object into Mail::Message.";
     }
 
-    return 1
-        if $self->trySend($message, %args);
+    $self->trySend($message, %args)
+        and return 1;
 
     $?==EAGAIN
         or return 0;
@@ -133,19 +132,14 @@ sub send($@)
     0;
 }
 
-#------------------------------------------
-
 =method trySend $message, %options
-
 Try to send the message. This will return true if successful, and
 false in case some problems where detected.  The C<$?> contains
 the exit status of the command which was started.
 
 =error Transporters of type $class cannot send.
-
 The M<Mail::Transport> object of the specified type can not send messages,
 but only receive message.
-
 =cut
 
 sub trySend($@)
@@ -153,20 +147,15 @@ sub trySend($@)
     $self->log(ERROR => "Transporters of type ".ref($self). " cannot send.");
 }
 
-#------------------------------------------
-
 =method putContent $message, $fh, %options
-
 Print the content of the $message to the $fh.
 
 =option  body_only BOOLEAN
 =default body_only <false>
-
 Print only the body of the message, not the whole.
 
 =option  undisclosed BOOLEAN
 =default undisclosed <false>
-
 Do not print the C<Bcc> and C<Resent-Bcc> lines.  Default false, which
 means that they are not printed.
 
@@ -185,7 +174,6 @@ sub putContent($$@)
     $self;
 }
 
-#------------------------------------------
 
 =method destinations $message, [$address|ARRAY]
 
@@ -213,9 +201,7 @@ As alternative, you may also specify the C<to> option to some of the senders
 found in the message itself about the destination.
 
 =warning Message has no destination
-It was not possible to figure-out where the message is intended to go
-to.
-
+It was not possible to figure-out where the message is intended to go to.
 =cut
 
 sub destinations($;$)
@@ -240,7 +226,6 @@ sub destinations($;$)
 }
 
 #------------------------------------------
-
 =section Server connection
 
 =section Error handling
