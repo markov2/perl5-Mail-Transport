@@ -234,7 +234,7 @@ sub Net::SMTP::datafast($)
     $self->_DATA or return 0;
 
     $$data =~ tr/\r\n/\015\012/ if "\r" ne "\015";  # mac
-    $$data =~ s/\015?\012/\015\012/g;  # \n -> crlf as sep.  Needed?
+    $$data =~ s/(?<!\015)\012/\015\012/g;  # \n -> crlf as sep.  Needed?
     $$data =~ s/^\./../;         # data starts with a dot, escape it
     $$data =~ s/\012\./\012../g; # other lines which start with a dot
 
