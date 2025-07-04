@@ -96,7 +96,7 @@ sub trySend($@)
     # Parent process is the main program, still
     $self->putContent($message, $mailer, undisclosed => 1);
 
-    unless(close MAILER)
+    unless($mailer->close)
     {   $self->log(NOTICE => "Errors when closing sendmail mailer $program: $!");
         $? ||= $!;
         return 0;
