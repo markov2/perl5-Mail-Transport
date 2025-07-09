@@ -13,6 +13,7 @@ version 3.006:
 	- ::SMTP 30% faster, 73% less computer power
 	- add .gitignore
 	- do not use bareword file-handles anymore.
+	- use defined-or
 
 version 3.005: Wed 22 Jul 10:40:05 CEST 2020
 

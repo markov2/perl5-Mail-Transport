@@ -62,16 +62,12 @@ sub init($)
     $self->SUPER::init($args) or return;
 
     $self->{MTM_program} = $args->{proxy}
-      || $self->findBinary('mailx')
-      || $self->findBinary('Mail')
-      || $self->findBinary('mail')
-      || return;
+     || $self->findBinary('mailx')
+     || $self->findBinary('Mail')
+     || $self->findBinary('mail')
+     || return;
 
-    $self->{MTM_style}
-      = defined $args->{style}                       ? $args->{style}
-      : $^O =~ m/linux|freebsd|bsdos|netbsd|openbsd/ ? 'BSD'
-      :                                                'RFC822';
-
+    $self->{MTM_style} = $args->{style} // ( $^O =~ m/linux|freebsd|bsdos|netbsd|openbsd/ ? 'BSD' : 'RFC822' );
     $self;
 }
 
