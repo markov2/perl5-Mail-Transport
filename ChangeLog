@@ -4,7 +4,9 @@
 All changes are made by Mark Overmeer <markov@cpan.org> unless
 explicitly stated differently.
 
-version 3.006:
+version 3.007:
+
+version 3.006: Thu 21 Aug 10:23:14 CEST 2025
 
 	Changes:
 	- MailBox mid-life upgrade: require Perl minimal version 5.16
