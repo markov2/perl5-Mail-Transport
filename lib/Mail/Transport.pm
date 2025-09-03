@@ -45,18 +45,18 @@ protocols will implement both sending and receiving.
 =cut
 
 my %mailers =
- ( exim     => '::Exim'
- , imap     => '::IMAP4'
- , imap4    => '::IMAP4'
- , mail     => '::Mailx'
- , mailx    => '::Mailx'
- , pop      => '::POP3'
- , pop3     => '::POP3'
- , postfix  => '::Sendmail'
- , qmail    => '::Qmail'
- , sendmail => '::Sendmail'
- , smtp     => '::SMTP'
- );
+  ( exim     => '::Exim'
+  , imap     => '::IMAP4'
+  , imap4    => '::IMAP4'
+  , mail     => '::Mailx'
+  , mailx    => '::Mailx'
+  , pop      => '::POP3'
+  , pop3     => '::POP3'
+  , postfix  => '::Sendmail'
+  , qmail    => '::Qmail'
+  , sendmail => '::Sendmail'
+  , smtp     => '::SMTP'
+  );
 
 =c_method new %options
 
@@ -133,7 +133,7 @@ sub new(@)
 {   my $class = shift;
 
     $class eq __PACKAGE__ || $class eq "Mail::Transport::Send"
-		or return $class->SUPER::new(@_);
+        or return $class->SUPER::new(@_);
 
     # auto restart by creating the right transporter.
 
@@ -218,9 +218,5 @@ sub findBinary($@)
 
     undef;
 }
-
-#------------------------------------------
-=section Error handling
-=cut
 
 1;
