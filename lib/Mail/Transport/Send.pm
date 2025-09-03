@@ -150,6 +150,8 @@ sub trySend($@)
 =method putContent $message, $fh, %options
 Print the content of the $message to the $fh.
 
+The content might not end with new-line.  See M<Mail::Message::endsOnNewline()>
+
 =option  body_only BOOLEAN
 =default body_only <false>
 Print only the body of the message, not the whole.
