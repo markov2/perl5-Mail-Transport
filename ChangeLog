@@ -6,6 +6,9 @@ explicitly stated differently.
 
 version 3.008:
 
+	Improvements:
+	- convert install to OODoc 3.05
+	
 version 3.007: Wed  3 Sep 10:47:04 CEST 2025
 
 	Fixes:
