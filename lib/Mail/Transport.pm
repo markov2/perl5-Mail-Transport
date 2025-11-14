@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Transport.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport;
 use base 'Mail::Reporter';
@@ -11,32 +12,33 @@ use warnings;
 use Carp;
 use File::Spec;
 
+#--------------------
 =chapter NAME
 
 Mail::Transport - use Mail Transfer Agents (MTAs)
 
 =chapter SYNOPSIS
 
- my $message = Mail::Message->new(...);
+  my $message = Mail::Message->new(...);
 
- # Some extensions implement sending:
- $message->send;
- $message->send(via => 'sendmail');
+  # Some extensions implement sending:
+  $message->send;
+  $message->send(via => 'sendmail');
 
- my $sender = M<Mail::Transport::SMTP>->new(...);
- $sender->send($message);
+  my $sender = Mail::Transport::SMTP->new(...);
+  $sender->send($message);
 
- # Some extensions implement receiving:
- my $receiver = M<Mail::Transport::POP3>->new(...);
- $message = $receiver->receive;
+  # Some extensions implement receiving:
+  my $receiver = Mail::Transport::POP3->new(...);
+  $message = $receiver->receive;
 
 =chapter DESCRIPTION
 
 Objects which extend C<Mail::Transport> implement sending and/or
 receiving of messages, using various protocols.
 
-M<Mail::Transport::Send> extends this class, and offers general
-functionality for send protocols, like SMTP.  M<Mail::Transport::Receive>
+Mail::Transport::Send extends this class, and offers general
+functionality for send protocols, like SMTP.  Mail::Transport::Receive
 also extends this class, and offers receive method.  Some transport
 protocols will implement both sending and receiving.
 
@@ -44,74 +46,75 @@ protocols will implement both sending and receiving.
 
 =cut
 
-my %mailers =
-  ( exim     => '::Exim'
-  , imap     => '::IMAP4'
-  , imap4    => '::IMAP4'
-  , mail     => '::Mailx'
-  , mailx    => '::Mailx'
-  , pop      => '::POP3'
-  , pop3     => '::POP3'
-  , postfix  => '::Sendmail'
-  , qmail    => '::Qmail'
-  , sendmail => '::Sendmail'
-  , smtp     => '::SMTP'
-  );
+my %mailers = (
+	exim     => '::Exim',
+	imap     => '::IMAP4',
+	imap4    => '::IMAP4',
+	mail     => '::Mailx',
+	mailx    => '::Mailx',
+	pop      => '::POP3',
+	pop3     => '::POP3',
+	postfix  => '::Sendmail',
+	qmail    => '::Qmail',
+	sendmail => '::Sendmail',
+	smtp     => '::SMTP'
+);
 
 =c_method new %options
 
-=option  hostname HOSTNAME|ARRAY
+=option  hostname $host|\@hosts
 =default hostname C<'localhost'>
-The host on which the server runs.  Some protocols accept an ARRAY
+The $host on which the server runs.  Some protocols accept an ARRAY
 of alternatives for this option.
 
-=option  interval SECONDS
+=option  interval $span
 =default interval C<30>
-The time between tries to contact the remote server for sending or
-receiving a message in SECONDS.  This number must be larger than 0.
+The time $span between tries to contact the remote server for sending or
+receiving a message in seconds.  This number must be larger than 0.
 
-=option  password STRING
+=option  password $password
 =default password undef
-Some protocols require a password to be given, usually in combination
+Some protocols require a $password to be given, usually in combination
 with a password.
 
-=option  proxy PATH
+=option  proxy $path
 =default proxy undef
 The name of the proxy software (the protocol handler).  This must be
-the name (preferable the absolute path) of your mail delivery
+the name (preferable the absolute $path) of your mail delivery
 software.
 
-=option  port INTEGER
+=option  port $port
 =default port undef
-The port number behind which the service is hiding on the remote server.
+The $port number behind which the service is hiding on the remote server.
 
-=option  retry NUMBER|undef
-=default retry <false>
-The number of retries before the sending will fail.  If C<undef>, the
+=option  retry $count|undef
+=default retry <unlimited>
+The number of retries before the sending will fail.  If undef, the
 number of retries is unlimited.
 
-=option  timeout SECONDS
+=option  timeout $span
 =default timeout C<120>
-SECONDS till time-out while establishing the connection to a remote server.
+The maximim seconds to wait for establishing the connection to a remote
+server.
 
-=option  username STRING
+=option  username $username
 =default username undef
 Some protocols require a user to login.
 
-=option  via CLASS|NAME
+=option  via CLASS|$name
 =default via C<'sendmail'>
 Which CLASS (extending C<Mail::Transport>) will transport the data.
-Some predefined NAMEs avoid long class names: C<mail> and C<mailx>
-are handled by the M<Mail::Transport::Mailx> module, C<sendmail>
-and C<postfix> belong to M<Mail::Transport::Sendmail>, and C<smtp>
-is implemented in M<Mail::Transport::SMTP>.
+Some predefined names avoid long class names: C<mail> and C<mailx>
+are handled by the Mail::Transport::Mailx module, C<sendmail>
+and C<postfix> belong to Mail::Transport::Sendmail, and C<smtp>
+is implemented in Mail::Transport::SMTP.
 
 The C<pop> or C<pop3> protocol implementation can be found distribution
-M<Mail::Transport::POP3>.  For C<imap> or C<imap4>, install
-M<Mail::Transport::IMAP4>.
+Mail::Transport::POP3.  For C<imap> or C<imap4>, install
+Mail::Transport::IMAP4.
 
-=option  executable FILENAME
-=default executable C<undef>
+=option  executable $file
+=default executable undef
 If you specify an executable, the module does not need to search the
 system directories to figure-out where the client lives.  Using this
 decreases the flexible usage of your program: moving your program
@@ -130,49 +133,49 @@ settings are used to find the correct location.
 =cut
 
 sub new(@)
-{   my $class = shift;
+{	my $class = shift;
 
-    $class eq __PACKAGE__ || $class eq "Mail::Transport::Send"
-        or return $class->SUPER::new(@_);
+	$class eq __PACKAGE__ || $class eq "Mail::Transport::Send"
+		or return $class->SUPER::new(@_);
 
-    # auto restart by creating the right transporter.
+	# auto restart by creating the right transporter.
 
-    my %args = @_;
-    my $via  = lc($args{via} || '')
-        or croak "No transport protocol provided";
+	my %args = @_;
+	my $via  = lc($args{via} || '')
+		or croak "No transport protocol provided";
 
-    $via     = 'Mail::Transport'.$mailers{$via} if exists $mailers{$via};
-    eval "require $via";
-    $@ ? undef : $via->new(@_);
+	$via     = 'Mail::Transport'.$mailers{$via} if exists $mailers{$via};
+	eval "require $via";
+	$@ ? undef : $via->new(@_);
 }
 
 sub init($)
-{   my ($self, $args) = @_;
-    $self->SUPER::init($args);
+{	my ($self, $args) = @_;
+	$self->SUPER::init($args);
 
-    $self->{MT_hostname} = $args->{hostname} // 'localhost';
-    $self->{MT_port}     = $args->{port};
-    $self->{MT_username} = $args->{username};
-    $self->{MT_password} = $args->{password};
-    $self->{MT_interval} = $args->{interval} || 30;
-    $self->{MT_retry}    = $args->{retry}    || -1;
-    $self->{MT_timeout}  = $args->{timeout}  || 120;
-    $self->{MT_proxy}    = $args->{proxy};
+	$self->{MT_hostname} = $args->{hostname} // 'localhost';
+	$self->{MT_port}     = $args->{port};
+	$self->{MT_username} = $args->{username};
+	$self->{MT_password} = $args->{password};
+	$self->{MT_interval} = $args->{interval} || 30;
+	$self->{MT_retry}    = $args->{retry}    || -1;
+	$self->{MT_timeout}  = $args->{timeout}  || 120;
+	$self->{MT_proxy}    = $args->{proxy};
 
-    if(my $exec = $args->{executable} || $args->{proxy})
-    {   $self->{MT_exec} = $exec;
+	if(my $exec = $args->{executable} || $args->{proxy})
+	{	$self->{MT_exec} = $exec;
 
-        File::Spec->file_name_is_absolute($exec)
-            or $self->log(WARNING => "Avoid program abuse: specify an absolute path for $exec.");
+		File::Spec->file_name_is_absolute($exec)
+			or $self->log(WARNING => "Avoid program abuse: specify an absolute path for $exec.");
 
-        -x $exec
-            or $self->log(WARNING => "Executable $exec does not exist."), return undef;
-    }
+		-x $exec
+			or $self->log(WARNING => "Executable $exec does not exist."), return undef;
+	}
 
-    $self;
+	$self;
 }
 
-#------------------------------------------
+#--------------------
 =section Server connection
 
 =method remoteHost
@@ -181,8 +184,8 @@ establish the connection to the server for sending or receiving mail.
 =cut
 
 sub remoteHost()
-{   my $self = shift;
-    @$self{ qw/MT_hostname MT_port MT_username MT_password/ };
+{	my $self = shift;
+	@$self{ qw/MT_hostname MT_port MT_username MT_password/ };
 }
 
 =method retry
@@ -190,8 +193,8 @@ Returns the retry interval, retry count, and timeout for the connection.
 =cut
 
 sub retry()
-{   my $self = shift;
-    @$self{ qw/MT_interval MT_retry MT_timeout/ };
+{	my $self = shift;
+	@$self{ qw/MT_interval MT_retry MT_timeout/ };
 }
 
 =method findBinary $name, [@directories]
@@ -206,17 +209,17 @@ of the binary to be used.
 my @safe_directories = qw(/usr/local/bin /usr/bin /bin /sbin /usr/sbin /usr/lib);
 
 sub findBinary($@)
-{   my ($self, $name) = (shift, shift);
+{	my ($self, $name) = (shift, shift);
 
-    return $self->{MT_exec}
-        if exists $self->{MT_exec};
+	return $self->{MT_exec}
+		if exists $self->{MT_exec};
 
-    foreach (@_, @safe_directories)
-    {   my $fullname = File::Spec->catfile($_, $name);
-        return $fullname if -x $fullname;
-    }
+	foreach (@_, @safe_directories)
+	{	my $fullname = File::Spec->catfile($_, $name);
+		return $fullname if -x $fullname;
+	}
 
-    undef;
+	undef;
 }
 
 1;

@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Transport.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Receive;
 use base 'Mail::Transport';
@@ -8,18 +9,19 @@ use base 'Mail::Transport';
 use strict;
 use warnings;
 
+#--------------------
 =chapter NAME
 
 Mail::Transport::Receive - receive messages
 
 =chapter SYNOPSIS
 
- my $receiver = Mail::Transport::POP3->new(...);
- my $message = $receiver->receive($id);
+  my $receiver = Mail::Transport::POP3->new(...);
+  my $message = $receiver->receive($id);
 
 =chapter DESCRIPTION
 
-Each object which extends M<Mail::Transport::Receive> implement
+Each object which extends Mail::Transport::Receive implement
 a protocol which can get messages into your application.  The internals
 of each implementation can differ quite a lot, so have a look at each
 separate manual page as well.
@@ -28,9 +30,9 @@ Current message receivers:
 
 =over 4
 
-=item * M<Mail::Transport::POP3>
+=item * Mail::Transport::POP3
 
-Implements the POP3 protocol.  See also M<Mail::Box::POP3>.
+Implements the POP3 protocol.  See also Mail::Box::POP3.
 
 =back
 
@@ -44,9 +46,9 @@ the next message automatically, other are random access and use the
 specified ID.
 =cut
 
-sub receive(@) {shift->notImplemented}
+sub receive(@) { $_[0]->notImplemented }
 
-#------------------------------------------
+#--------------------
 =section Server connection
 
 =section Error handling

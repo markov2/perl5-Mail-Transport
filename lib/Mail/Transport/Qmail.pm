@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Transport.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Qmail;
 use base 'Mail::Transport::Send';
@@ -10,14 +11,15 @@ use warnings;
 
 use Carp;
 
+#--------------------
 =chapter NAME
 
 Mail::Transport::Qmail - transmit messages using external Qmail program
 
 =chapter SYNOPSIS
 
- my $sender = Mail::Transport::Qmail->new(...);
- $sender->send($message);
+  my $sender = Mail::Transport::Qmail->new(...);
+  $sender->send($message);
 
 =chapter DESCRIPTION
 
@@ -32,43 +34,43 @@ part of the qmail mail-delivery system.
 =cut
 
 sub init($)
-{   my ($self, $args) = @_;
-    $args->{via} = 'qmail';
+{	my ($self, $args) = @_;
+	$args->{via} = 'qmail';
 
-    $self->SUPER::init($args) or return;
+	$self->SUPER::init($args) or return;
 
-    $self->{MTM_program} = $args->{proxy} || $self->findBinary('qmail-inject', '/var/qmail/bin') || return;
-    $self;
+	$self->{MTM_program} = $args->{proxy} || $self->findBinary('qmail-inject', '/var/qmail/bin')
+		or return;
+
+	$self;
 }
 
 =method trySend $message, %options
-
 =error Errors when closing Qmail mailer $program: $!
 The Qmail mail transfer agent did start, but was not able to handle the
 message for some specific reason.
-
 =cut
 
 sub trySend($@)
-{   my ($self, $message, %args) = @_;
+{	my ($self, $message, %args) = @_;
 
-    my $program = $self->{MTM_program};
-    my $mailer;
-    if(open($mailer, '|-')==0)
-    {   { exec $program; }
-        $self->log(NOTICE => "Errors when opening pipe to $program: $!");
-        exit 1;
-    }
- 
-    $self->putContent($message, $mailer, undisclosed => 1);
+	my $program = $self->{MTM_program};
+	my $mailer;
+	if(open($mailer, '|-')==0)
+	{	{ exec $program; }
+		$self->log(NOTICE => "Errors when opening pipe to $program: $!");
+		exit 1;
+	}
 
-    unless($mailer->close)
-    {   $self->log(ERROR => "Errors when closing Qmail mailer $program: $!");
-        $? ||= $!;
-        return 0;
-    }
+	$self->putContent($message, $mailer, undisclosed => 1);
 
-    1;
+	unless($mailer->close)
+	{	$self->log(ERROR => "Errors when closing Qmail mailer $program: $!");
+		$? ||= $!;
+		return 0;
+	}
+
+	1;
 }
 
 1;

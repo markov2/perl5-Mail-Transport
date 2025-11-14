@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Transport.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Sendmail;
 use base 'Mail::Transport::Send';
@@ -10,14 +11,15 @@ use warnings;
 
 use Carp;
 
+#--------------------
 =chapter NAME
 
 Mail::Transport::Sendmail - transmit messages using external Sendmail program
 
 =chapter SYNOPSIS
 
- my $sender = Mail::Transport::Sendmail->new(...);
- $sender->send($message);
+  my $sender = Mail::Transport::Sendmail->new(...);
+  $sender->send($message);
 
 =chapter DESCRIPTION
 
@@ -52,17 +54,17 @@ because the latter will be taken by sendmail as one word only.
 =cut
 
 sub init($)
-{   my ($self, $args) = @_;
-    $args->{via} = 'sendmail';
+{	my ($self, $args) = @_;
+	$args->{via} = 'sendmail';
 
-    $self->SUPER::init($args) or return;
+	$self->SUPER::init($args) or return;
 
-    $self->{MTS_program} = $args->{proxy} || $self->findBinary('sendmail') || return;
-    $self->{MTS_opts} = $args->{sendmail_options} || [];
-    $self;
+	$self->{MTS_program} = $args->{proxy} || $self->findBinary('sendmail') or return;
+	$self->{MTS_opts} = $args->{sendmail_options} || [];
+	$self;
 }
 
-#------------------------------------------
+#--------------------
 =section Sending mail
 
 =method trySend $message, %options
@@ -77,32 +79,32 @@ some specific reason the message could not be handled correctly.
 =cut
 
 sub trySend($@)
-{   my ($self, $message, %args) = @_;
+{	my ($self, $message, %args) = @_;
 
-    my $program = $self->{MTS_program};
-    my $mailer;
-    if(open($mailer, '|-')==0)
-    {   # Child process is sendmail binary
-        my $options = $args{sendmail_options} || [];
-        my @to = map $_->address, $self->destinations($message, $args{to});
+	my $program = $self->{MTS_program};
+	my $mailer;
+	if(open($mailer, '|-')==0)
+	{	# Child process is sendmail binary
+		my $options = $args{sendmail_options} || [];
+		my @to = map $_->address, $self->destinations($message, $args{to});
 
-        # {} to avoid warning about code after exec
-        {  exec $program, '-i', @{$self->{MTS_opts}}, @$options, @to; }
+		# {} to avoid warning about code after exec
+		{	exec $program, '-i', @{$self->{MTS_opts}}, @$options, @to; }
 
-        $self->log(NOTICE => "Errors when opening pipe to $program: $!");
-        exit 1;
-    }
- 
-    # Parent process is the main program, still
-    $self->putContent($message, $mailer, undisclosed => 1);
+		$self->log(NOTICE => "Errors when opening pipe to $program: $!");
+		exit 1;
+	}
 
-    unless($mailer->close)
-    {   $self->log(NOTICE => "Errors when closing sendmail mailer $program: $!");
-        $? ||= $!;
-        return 0;
-    }
+	# Parent process is the main program, still
+	$self->putContent($message, $mailer, undisclosed => 1);
 
-    1;
+	unless($mailer->close)
+	{	$self->log(NOTICE => "Errors when closing sendmail mailer $program: $!");
+		$? ||= $!;
+		return 0;
+	}
+
+	1;
 }
 
 1;

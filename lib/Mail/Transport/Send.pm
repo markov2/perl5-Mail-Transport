@@ -1,6 +1,7 @@
-# This code is part of distribution Mail-Transport.  Meta-POD processed with
-# OODoc into POD and HTML manual-pages.  See README.md
-# Copyright Mark Overmeer.  Licensed under the same terms as Perl itself.
+#oodist: *** DO NOT USE THIS VERSION FOR PRODUCTION ***
+#oodist: This file contains OODoc-style documentation which will get stripped
+#oodist: during its release in the distribution.  You can use this file for
+#oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Send;
 use base 'Mail::Transport';
@@ -12,20 +13,21 @@ use Carp;
 use File::Spec;
 use Errno 'EAGAIN';
 
+#--------------------
 =chapter NAME
 
 Mail::Transport::Send - send a message
 
 =chapter SYNOPSIS
 
- my $message = Mail::Message->new(...);
+  my $message = Mail::Message->new(...);
 
- # Some extensions implement sending:
- $message->send;
- $message->send(via => 'sendmail');
+  # Some extensions implement sending:
+  $message->send;
+  $message->send(via => 'sendmail');
 
- my $sender = M<Mail::Transport::SMTP>->new(...);
- $sender->send($message);
+  my $sender = Mail::Transport::SMTP->new(...);
+  $sender->send($message);
 
 =chapter DESCRIPTION
 
@@ -36,18 +38,18 @@ without C<via> options to get a message transported.
 
 =over 4
 
-=item * M<Mail::Transport::Sendmail>
+=item * Mail::Transport::Sendmail
 Use sendmail to process and deliver the mail.  This requires the
 C<sendmail> program to be installed on your system.  Whether this
 is an original sendmail, or a replacement from Postfix does matter.
 
-=item * M<Mail::Transport::Exim>
+=item * Mail::Transport::Exim
 Use C<exim> to distribute the message.
 
-=item * M<Mail::Transport::Qmail>
+=item * Mail::Transport::Qmail
 Use C<qmail-inject> to distribute the message.
 
-=item * M<Mail::Transport::SMTP>
+=item * Mail::Transport::SMTP
 In this case, Perl is handling mail transport on its own.  This is
 less desired but more portable than sending with sendmail or qmail.
 The advantage is that this sender is environment independent, and easier
@@ -56,7 +58,7 @@ your program will wait until the message is delivered, and the message
 is lost when your program is interrupted during delivery (which may take
 hours to complete).
 
-=item * M<Mail::Transport::Mailx>
+=item * Mail::Transport::Mailx
 Use the external C<mail>, C<mailx>, or C<Mail> programs to send the
 message.  Usually, the result is poor, because some versions of these
 programs do not support MIME headers.  Besides, these programs are
@@ -73,21 +75,20 @@ known to have exploitable security breaches.
 =cut
 
 sub new(@)
-{   my $class = shift;
-    return $class->SUPER::new(@_)
-       if $class ne __PACKAGE__;
+{	my $class = shift;
+	$class eq __PACKAGE__ or return $class->SUPER::new(@_);
 
-    require Mail::Transport::Sendmail;
-    Mail::Transport::Sendmail->new(@_);
+	require Mail::Transport::Sendmail;
+	Mail::Transport::Sendmail->new(@_);
 }
 
-#------------------------------------------
+#--------------------
 =section Sending mail
 
 =method send $message, %options
 
 Transmit the $message, which may be anything what can be coerced into a
-M<Mail::Message>, so including M<Mail::Internet> and M<MIME::Entity>
+Mail::Message, so including Mail::Internet and MIME::Entity
 messages.  It returns true when the transmission was successfully completed.
 
 =option  interval SECONDS
@@ -97,39 +98,39 @@ messages.  It returns true when the transmission was successfully completed.
 =default retry M<new(retry)>
 
 =option  to STRING
-=default to C<undef>
+=default to undef
 Overrules the destination(s) of the message, which is by default taken
 from the (Resent-)To, (Resent-)Cc, and (Resent-)Bcc.
 
 =cut
 
 sub send($@)
-{   my ($self, $message, %args) = @_;
+{	my ($self, $message, %args) = @_;
 
-    unless($message->isa('Mail::Message'))  # avoid rebless.
-    {   $message = Mail::Message->coerce($message);
-        defined $message
-            or confess "Unable to coerce object into Mail::Message.";
-    }
+	unless($message->isa('Mail::Message'))  # avoid rebless.
+	{	$message = Mail::Message->coerce($message);
+		defined $message
+			or confess "Unable to coerce object into Mail::Message.";
+	}
 
-    $self->trySend($message, %args)
-        and return 1;
+	$self->trySend($message, %args)
+		and return 1;
 
-    $?==EAGAIN
-        or return 0;
+	$?==EAGAIN
+		or return 0;
 
-    my ($interval, $retry) = $self->retry;
-    $interval = $args{interval} if exists $args{interval};
-    $retry    = $args{retry}    if exists $args{retry};
+	my ($interval, $retry) = $self->retry;
+	$interval = $args{interval} if exists $args{interval};
+	$retry    = $args{retry}    if exists $args{retry};
 
-    while($retry!=0)
-    {   sleep $interval;
-        return 1 if $self->trySend($message, %args);
-        $?==EAGAIN or return 0;
-        $retry--;
-    }
+	while($retry!=0)
+	{	sleep $interval;
+		return 1 if $self->trySend($message, %args);
+		$?==EAGAIN or return 0;
+		$retry--;
+	}
 
-    0;
+	0;
 }
 
 =method trySend $message, %options
@@ -138,13 +139,13 @@ false in case some problems where detected.  The C<$?> contains
 the exit status of the command which was started.
 
 =error Transporters of type $class cannot send.
-The M<Mail::Transport> object of the specified type can not send messages,
+The Mail::Transport object of the specified type can not send messages,
 but only receive message.
 =cut
 
 sub trySend($@)
-{   my $self = shift;
-    $self->log(ERROR => "Transporters of type ".ref($self). " cannot send.");
+{	my $self = shift;
+	$self->log(ERROR => "Transporters of type ".ref($self). " cannot send.");
 }
 
 =method putContent $message, $fh, %options
@@ -164,24 +165,24 @@ means that they are not printed.
 =cut
 
 sub putContent($$@)
-{   my ($self, $message, $fh, %args) = @_;
+{	my ($self, $message, $fh, %args) = @_;
 
-       if($args{body_only})   { $message->body->print($fh) }
-    elsif($args{undisclosed}) { $message->Mail::Message::print($fh) }
-    else
-    {   $message->head->printUndisclosed($fh);
-        $message->body->print($fh);
-    }
+	   if($args{body_only})   { $message->body->print($fh) }
+	elsif($args{undisclosed}) { $message->Mail::Message::print($fh) }
+	else
+	{	$message->head->printUndisclosed($fh);
+		$message->body->print($fh);
+	}
 
-    $self;
+	$self;
 }
 
 
-=method destinations $message, [$address|ARRAY]
+=method destinations $message, [$address|\@addresses]
 
 Determine the destination for this message.  If a valid $address is defined,
 this is used to overrule the addresses within the message.  If the $address
-is C<undef> it is ignored.  It may also be an ARRAY of addresses.
+is undef it is ignored.  It may also be an ARRAY of @addresses.
 
 If no $address is specified, the message is scanned for resent groups
 (see M<Mail::Message::Head::Complete::resentGroups()>).  The addresses
@@ -207,27 +208,27 @@ It was not possible to figure-out where the message is intended to go to.
 =cut
 
 sub destinations($;$)
-{   my ($self, $message, $overrule) = @_;
-    my @to;
+{	my ($self, $message, $overrule) = @_;
+	my @to;
 
-    if(defined $overrule)      # Destinations overruled by user.
-    {   @to = map { ref $_ && $_->isa('Mail::Address') ? ($_) : Mail::Address->parse($_) }
-            ref $overrule eq 'ARRAY' ? @$overrule : ($overrule);
-    }
-    elsif(my @rgs = $message->head->resentGroups)
-    {   # Create with bounce
-        @to = $rgs[0]->destinations;
-        @to or $self->log(WARNING => "Resent group does not specify a destination"), return ();
-    }
-    else
-    {   @to = $message->destinations;
-        @to or $self->log(WARNING => "Message has no destination"), return ();
-    }
+	if(defined $overrule)      # Destinations overruled by user.
+	{	@to = map { ref $_ && $_->isa('Mail::Address') ? ($_) : Mail::Address->parse($_) }
+			ref $overrule eq 'ARRAY' ? @$overrule : ($overrule);
+	}
+	elsif(my @rgs = $message->head->resentGroups)
+	{	# Create with bounce
+		@to = $rgs[0]->destinations;
+		@to or $self->log(WARNING => "Resent group does not specify a destination"), return ();
+	}
+	else
+	{	@to = $message->destinations;
+		@to or $self->log(WARNING => "Message has no destination"), return ();
+	}
 
-    @to;
+	@to;
 }
 
-#------------------------------------------
+#--------------------
 =section Server connection
 
 =section Error handling
