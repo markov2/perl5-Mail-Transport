@@ -222,4 +222,8 @@ sub findBinary($@)
 	undef;
 }
 
+#--------------------
+=section Error handling
+=cut
+
 1;

@@ -13,6 +13,15 @@ via various Mail Transfer Agents (MTAs) like postfix or exim.
 It is part of the MailBox collection of modules, however: you are not
 limited to "Mail::Message" messages.
 
+## Installing
+
+On github, you can find the processed version for each release.  But the
+better source is CPAN; to get it installed simply run:
+
+```sh
+   cpan -i Mail::Transport
+```
+
 ## Development &rarr; Release
 
 Important to know, is that I use an extension on POD to write the manuals.
@@ -26,13 +35,6 @@ existed, sorry for the confusion)
 
 Clone from github for the "raw" version.  For instance, when you want
 to contribute a new feature.
-
-On github, you can find the processed version for each release.  But the
-better source is CPAN; to get it installed simply run:
-
-```sh
-   cpan -i Mail::Transport
-```
 
 ## Contributing
 

@@ -42,15 +42,10 @@ my %oodist   = (
 		publish        => "$publish/raw",
 	},
 
-	generate => [
-	  {
-		# Add real pod to the releases
+	generate => [ {
 		format         => 'pod3',
 		podtail        => undef,
-	  },
- 	  # You may add HTML formatters here.
- 		  # You may add exporter configurations here.
-	],
+	}, ],
 );
 
 my %requires = (
@@ -61,34 +56,8 @@ my %requires = (
 	'Errno'          => 0,
 	'Net::SMTP'      => 0,
 
-	'Mail::Reporter' => 3,
+	'Mail::Reporter' => '3, <4.0',
 );
-
-foreach my $module (sort keys %prereq)
-{   my $reqversion = $prereq{$module};
-    eval "require $module";
-
-    if($@ && $@ =~ m/^Can't locate /)
-    {   print "    $module is not yet installed\n" }
-    elsif($@)
-    {   print "    $module produced an error:\n$@";
-        push @errors, $module;
-    }
-    elsif($module->VERSION < $reqversion)
-    {   print "    $module version ", $module->VERSION, " is outdated; requires $reqversion\n";
-    }
-    else
-    {   print "    $module version ", $module->VERSION, " is ok (required is $reqversion)\n";
-    }
-}
-
-if($errors)
-{   die <<'FIX';
-*** ERROR! You have to install @errors manually,
-*** before you can retry to install MailBox.
-FIX
-    exit 1;
-}
 
 WriteMakefile
 	NAME       => 'Mail::Transport',
