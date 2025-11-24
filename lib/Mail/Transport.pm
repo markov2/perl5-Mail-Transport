@@ -37,6 +37,10 @@ Mail::Transport - use Mail Transfer Agents (MTAs)
 Objects which extend C<Mail::Transport> implement sending and/or
 receiving of messages, using various protocols.
 
+B<This is a maintenance release for the old interface>.  Read
+F<https://github.com/markov2/perl5-Mail-Box/wiki/> how
+to move towards version 4.
+
 Mail::Transport::Send extends this class, and offers general
 functionality for send protocols, like SMTP.  Mail::Transport::Receive
 also extends this class, and offers receive method.  Some transport
