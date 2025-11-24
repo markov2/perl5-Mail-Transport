@@ -4,12 +4,13 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Exim;
-use base 'Mail::Transport::Send';
+use parent 'Mail::Transport::Send';
 
 use strict;
 use warnings;
 
-use Carp;
+use Log::Report   'mail-transport';
+
 use Scalar::Util  qw/blessed/;
 
 #--------------------
@@ -40,8 +41,7 @@ specify the path, using M<new(proxy)>.
 sub init($)
 {	my ($self, $args) = @_;
 	$args->{via} = 'exim';
-
-	$self->SUPER::init($args) or return;
+	$self->SUPER::init($args);
 
 	$self->{MTS_program} = $args->{proxy}
 		|| ( -x '/usr/sbin/exim4' ? '/usr/sbin/exim4' : undef)
@@ -55,6 +55,9 @@ sub init($)
 =error Errors when closing Exim mailer $program: $!
 The Exim mail transfer agent did start, but was not able to handle the message
 correctly.
+
+=fault cannot open pipe to $program: $!
+=fault errors when closing Exim mailer $program: $!
 =cut
 
 sub trySend($@)
@@ -68,17 +71,13 @@ sub trySend($@)
 	my $mailer;
 	if(open($mailer, '|-')==0)
 	{	{ exec $program, '-i', '-f', $from, @to; }  # {} to avoid warning
-		$self->log(NOTICE => "Errors when opening pipe to $program: $!");
-		exit 1;
+		fault __x"cannot open pipe to {program}", program => $program;
 	}
 
 	$self->putContent($message, $mailer, undisclosed => 1);
 
-	unless($mailer->close)
-	{	$self->log(ERROR => "Errors when closing Exim mailer $program: $!");
-		$? ||= $!;
-		return 0;
-	}
+	$mailer->close
+		or fault __x"errors when closing Exim mailer {program}", program => $program;
 
 	1;
 }

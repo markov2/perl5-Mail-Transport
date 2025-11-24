@@ -4,12 +4,12 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Qmail;
-use base 'Mail::Transport::Send';
+use parent 'Mail::Transport::Send';
 
 use strict;
 use warnings;
 
-use Carp;
+use Log::Report   'mail-transport';
 
 #--------------------
 =chapter NAME
@@ -36,12 +36,9 @@ part of the qmail mail-delivery system.
 sub init($)
 {	my ($self, $args) = @_;
 	$args->{via} = 'qmail';
+	$self->SUPER::init($args);
 
-	$self->SUPER::init($args) or return;
-
-	$self->{MTM_program} = $args->{proxy} || $self->findBinary('qmail-inject', '/var/qmail/bin')
-		or return;
-
+	$self->{MTM_program} = $args->{proxy} || $self->findBinary('qmail-inject', '/var/qmail/bin') or return;
 	$self;
 }
 
@@ -49,6 +46,9 @@ sub init($)
 =error Errors when closing Qmail mailer $program: $!
 The Qmail mail transfer agent did start, but was not able to handle the
 message for some specific reason.
+
+=fault cannot open pipe to $program: $!
+=fault errors when closing Qmail mailer $program: $!
 =cut
 
 sub trySend($@)
@@ -58,17 +58,13 @@ sub trySend($@)
 	my $mailer;
 	if(open($mailer, '|-')==0)
 	{	{ exec $program; }
-		$self->log(NOTICE => "Errors when opening pipe to $program: $!");
-		exit 1;
+		fault __x"cannot open pipe to {program}.", program => $program;
 	}
 
 	$self->putContent($message, $mailer, undisclosed => 1);
 
-	unless($mailer->close)
-	{	$self->log(ERROR => "Errors when closing Qmail mailer $program: $!");
-		$? ||= $!;
-		return 0;
-	}
+	$mailer->close
+        or fault __x"errors when closing Qmail mailer {program}", program => $program;
 
 	1;
 }

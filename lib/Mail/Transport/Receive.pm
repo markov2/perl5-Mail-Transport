@@ -4,10 +4,12 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Receive;
-use base 'Mail::Transport';
+use parent 'Mail::Transport';
 
 use strict;
 use warnings;
+
+use Log::Report   'mail-transport';
 
 #--------------------
 =chapter NAME

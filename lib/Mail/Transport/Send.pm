@@ -4,14 +4,15 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Send;
-use base 'Mail::Transport';
+use parent 'Mail::Transport';
 
 use strict;
 use warnings;
 
-use Carp;
-use File::Spec;
-use Errno 'EAGAIN';
+use Log::Report   'mail-transport';
+
+use File::Spec    ();
+use Errno         'EAGAIN';
 
 #--------------------
 =chapter NAME
@@ -102,6 +103,7 @@ messages.  It returns true when the transmission was successfully completed.
 Overrules the destination(s) of the message, which is by default taken
 from the (Resent-)To, (Resent-)Cc, and (Resent-)Bcc.
 
+=error unable to coerce a {type} object into a Mail::Message.
 =cut
 
 sub send($@)
@@ -110,7 +112,7 @@ sub send($@)
 	unless($message->isa('Mail::Message'))  # avoid rebless.
 	{	$message = Mail::Message->coerce($message);
 		defined $message
-			or confess "Unable to coerce object into Mail::Message.";
+			or error __x"unable to coerce a {type} object into a Mail::Message.", type => ref $message;
 	}
 
 	$self->trySend($message, %args)
@@ -138,14 +140,14 @@ Try to send the message. This will return true if successful, and
 false in case some problems where detected.  The C<$?> contains
 the exit status of the command which was started.
 
-=error Transporters of type $class cannot send.
+=error transporters of type $class cannot send.
 The Mail::Transport object of the specified type can not send messages,
 but only receive message.
 =cut
 
 sub trySend($@)
 {	my $self = shift;
-	$self->log(ERROR => "Transporters of type ".ref($self). " cannot send.");
+	error __x"transporters of type {class} cannot send.", class => ref $self;
 }
 
 =method putContent $message, $fh, %options
@@ -154,11 +156,11 @@ Print the content of the $message to the $fh.
 The content might not end with new-line.  See M<Mail::Message::endsOnNewline()>
 
 =option  body_only BOOLEAN
-=default body_only <false>
+=default body_only false
 Print only the body of the message, not the whole.
 
 =option  undisclosed BOOLEAN
-=default undisclosed <false>
+=default undisclosed false
 Do not print the C<Bcc> and C<Resent-Bcc> lines.  Default false, which
 means that they are not printed.
 
@@ -189,7 +191,7 @@ If no $address is specified, the message is scanned for resent groups
 found in the first (is latest added) group are used.  If no resent groups
 are found, the normal C<To>, C<Cc>, and C<Bcc> lines are taken.
 
-=warning Resent group does not specify a destination
+=warning resent group does not specify a destination.
 The message which is sent is the result of a bounce (for instance
 created with M<Mail::Message::bounce()>), and therefore starts with a
 C<Received> header field.  With the C<bounce>, the new destination(s)
@@ -203,7 +205,7 @@ As alternative, you may also specify the C<to> option to some of the senders
 (for instance M<Mail::Transport::SMTP::send(to)> to overrule any information
 found in the message itself about the destination.
 
-=warning Message has no destination
+=warning message has no destination.
 It was not possible to figure-out where the message is intended to go to.
 =cut
 
@@ -218,11 +220,11 @@ sub destinations($;$)
 	elsif(my @rgs = $message->head->resentGroups)
 	{	# Create with bounce
 		@to = $rgs[0]->destinations;
-		@to or $self->log(WARNING => "Resent group does not specify a destination"), return ();
+		@to or warning(__x"resent group does not specify a destination."), return ();
 	}
 	else
 	{	@to = $message->destinations;
-		@to or $self->log(WARNING => "Message has no destination"), return ();
+		@to or warning(__x"message has no destination."), return ();
 	}
 
 	@to;

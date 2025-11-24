@@ -4,12 +4,14 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::SMTP;
-use base 'Mail::Transport::Send';
+use parent 'Mail::Transport::Send';
 
 use strict;
 use warnings;
 
-use Net::SMTP         ();
+use Log::Report   'mail-transport';
+
+use Net::SMTP     ();
 
 use constant CMD_OK      => 2;
 

@@ -4,12 +4,12 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Sendmail;
-use base 'Mail::Transport::Send';
+use parent 'Mail::Transport::Send';
 
 use strict;
 use warnings;
 
-use Carp;
+use Log::Report   'mail-transport';
 
 #--------------------
 =chapter NAME
@@ -38,7 +38,6 @@ C<maildrop>, the C<pickupd> will only sequentially insert messages
 into C<cleanup>.  That process can take considerable elapse time.
 Directly inserting via C<smtpd> will parallellize the cleanup process.
 
-
 =chapter METHODS
 
 =c_method new %options
@@ -56,8 +55,7 @@ because the latter will be taken by sendmail as one word only.
 sub init($)
 {	my ($self, $args) = @_;
 	$args->{via} = 'sendmail';
-
-	$self->SUPER::init($args) or return;
+	$self->SUPER::init($args);
 
 	$self->{MTS_program} = $args->{proxy} || $self->findBinary('sendmail') or return;
 	$self->{MTS_opts} = $args->{sendmail_options} || [];
@@ -72,6 +70,7 @@ sub init($)
 =option  sendmail_options ARRAY
 =default sendmail_options undef
 
+=fault cannot open pipe to $program: $!
 =error Errors when closing sendmail mailer $program: $!
 The was no problem starting the sendmail mail transfer agent, but for
 some specific reason the message could not be handled correctly.
@@ -90,19 +89,14 @@ sub trySend($@)
 
 		# {} to avoid warning about code after exec
 		{	exec $program, '-i', @{$self->{MTS_opts}}, @$options, @to; }
-
-		$self->log(NOTICE => "Errors when opening pipe to $program: $!");
-		exit 1;
+		fault __x"cannot open pipe to {program}", program => $program;
 	}
 
 	# Parent process is the main program, still
 	$self->putContent($message, $mailer, undisclosed => 1);
 
-	unless($mailer->close)
-	{	$self->log(NOTICE => "Errors when closing sendmail mailer $program: $!");
-		$? ||= $!;
-		return 0;
-	}
+	$mailer->close
+		or fault __x"errors when closing sendmail mailer {program}", program => $program;
 
 	1;
 }

@@ -13,6 +13,7 @@ version 4.000:
 
 	Changes:
 	- use Mail::Box 4 exception model: use Log::Report
+	- remove Carp
 
 version 3.008:
 

@@ -4,12 +4,12 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Mail::Transport::Mailx;
-use base 'Mail::Transport::Send';
+use parent 'Mail::Transport::Send';
 
 use strict;
 use warnings;
 
-use Carp;
+use Log::Report   'mail-transport';
 
 #--------------------
 =chapter NAME
@@ -46,7 +46,6 @@ mechanism.
 
 =option  style 'BSD'|'RFC822'
 =default style <autodetect>
-
 There are two version of the C<mail> program.  The newest accepts
 RFC822 messages, and automagically collect information about where
 the message is to be send to.  The BSD style mail command predates
@@ -71,7 +70,9 @@ sub init($)
 }
 
 =method trySend $message, %options
-=error Sending via mailx mailer $program failed: $! ($?)
+
+=fault cannot open pipe to $program: $!
+=fault sending via mailx mailer $program failed: $!
 Mailx (in some shape: there are many different implementations) did start
 accepting messages, but did not succeed sending it.
 =cut
@@ -96,17 +97,14 @@ sub _try_send_bsdish($$)
 	if((open $mailer, '|-')==0)
 	{	close STDOUT;
 		{	exec $program, @options, @to }
-		$self->log(NOTICE => "Cannot start contact to $program: $!");
-		exit 1;
+		fault __x"cannot open pipe to {program}", program => $program;
 	}
 
 	$self->putContent($message, $mailer, body_only => 1);
 
 	$mailer->close
-		or $self->log(ERROR => "Sending via mailx mailer $program failed: $! ($?)"), return 0;
+		or fault __x"errors when closing Mailx mailer {program}", program => $program;
 
-	my $msgid = $message->messageId;
-	$self->log(PROGRESS => "Message $msgid send.");
 	1;
 }
 
@@ -118,12 +116,12 @@ sub trySend($@)
 
 	my $program = $self->{MTM_program};
 	open my $mailer, '|-', $program, '-t'
-		or $self->log(NOTICE => "Cannot start contact to $program: $!"), return 0;
+		or fault __x"cannot open pipe to {program}", program => $program;
 
 	$self->putContent($message, $mailer);
 
 	$mailer->close
-		or $self->log(ERROR => "Sending via mailx mailer $program failed: $! ($?)"), return 0;
+		or fault __x"errors when closing Mailx mailer {program}", program => $program;
 
 	1;
 }
