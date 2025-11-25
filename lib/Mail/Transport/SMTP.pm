@@ -144,10 +144,11 @@ C<Sender> field of the message or the first address of the C<From>
 field.  This defaults to "E<lt> E<gt>", which represents "no address".
 
 =option  esmtp_options \%opts
-=default esmtp_options {}
+=default esmtp_options +{}
 Additional or overridden EMSTP options. See M<new(esmtp_options)>
 
-=notice No addresses found to send the message to, no connection made
+=warning use option `to' to overrule the destination: `To' refers to a field.
+=notice no addresses found to send the message to, no connection made.
 
 =cut
 
@@ -161,10 +162,10 @@ sub trySend($@)
 
 	# Which are the destinations.
 	! defined $args{To}
-		or $self->log(WARNING => "Use option `to' to overrule the destination: `To' refers to a field");
+		or warning __x"use option `to' to overrule the destination: `To' refers to a field.";
 
 	my @to = map $_->address, $self->destinations($message, $args{to});
-	@to or $self->log(NOTICE => 'No addresses found to send the message to, no connection made'), return 1;
+	@to or notice(__x"no addresses found to send the message to, no connection made."), return 1;
 
 	#### Prepare the message.
 

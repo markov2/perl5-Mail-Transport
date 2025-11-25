@@ -11,7 +11,6 @@ use warnings;
 
 use Log::Report   'mail-transport';
 
-use Carp;
 use File::Spec    ();
 
 #--------------------
@@ -129,12 +128,12 @@ decreases the flexible usage of your program: moving your program
 to other systems may involve changing the path to the executable,
 which otherwise would work auto-detect and unmodified.
 
-=warning Avoid program abuse: specify an absolute path for $exec.
+=error Avoid program abuse: specify an absolute path for $program.
 Specifying explicit locations for executables of email transfer agents
 should only be done with absolute file names, to avoid various pontential
 security problems.
 
-=warning Executable $exec does not exist.
+=error Executable $program does not exist.
 The explicitly indicated mail transfer agent does not exists. The normal
 settings are used to find the correct location.
 
@@ -149,8 +148,7 @@ sub new(@)
 	# auto restart by creating the right transporter.
 
 	my %args = @_;
-	my $via  = lc($args{via} || '')
-		or croak "No transport protocol provided";
+	my $via  = lc($args{via} // '') or panic "no transport protocol provided";
 
 	$via     = 'Mail::Transport'.$mailers{$via} if exists $mailers{$via};
 	eval "require $via";
@@ -174,10 +172,10 @@ sub init($)
 	{	$self->{MT_exec} = $exec;
 
 		File::Spec->file_name_is_absolute($exec)
-			or $self->log(WARNING => "Avoid program abuse: specify an absolute path for $exec.");
+			or error __x"avoid program abuse: specify an absolute path for {program}.", program => $exec;
 
 		-x $exec
-			or $self->log(WARNING => "Executable $exec does not exist."), return undef;
+			or error __x"executable {program} does not exist.", program => $exec;
 	}
 
 	$self;
@@ -191,19 +189,13 @@ Returns the hostname, port number, username and password to be used to
 establish the connection to the server for sending or receiving mail.
 =cut
 
-sub remoteHost()
-{	my $self = shift;
-	@$self{ qw/MT_hostname MT_port MT_username MT_password/ };
-}
+sub remoteHost() { @{$_[0]}{ qw/MT_hostname MT_port MT_username MT_password/ } }
 
 =method retry
 Returns the retry interval, retry count, and timeout for the connection.
 =cut
 
-sub retry()
-{	my $self = shift;
-	@$self{ qw/MT_interval MT_retry MT_timeout/ };
-}
+sub retry() { @{$_[0]}{ qw/MT_interval MT_retry MT_timeout/ } }
 
 =method findBinary $name, [@directories]
 Look for a binary with the specified $name in the directories which
