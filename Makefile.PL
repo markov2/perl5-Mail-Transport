@@ -54,10 +54,11 @@ my %requires = (
 	'File::Spec'     => 0.7,
 	'IO::Socket'     => 0,
 	'List::Util'     => 0,
-	'Log::Report'    => '1.42',
+	'Log::Report'    => 1.42,
 	'Net::SMTP'      => 0,
+	'String::Print'  => 1.01,
 
-	'Mail::Reporter' => '4.0',
+	'Mail::Reporter' => 4.0,
 );
 
 WriteMakefile

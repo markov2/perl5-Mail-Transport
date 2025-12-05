@@ -9,7 +9,7 @@ use parent 'Mail::Transport::Send';
 use strict;
 use warnings;
 
-use Log::Report   'mail-transport';
+use Log::Report   'mail-transport', import => [ qw/__x error fault warning/ ];
 
 #--------------------
 =chapter NAME

@@ -9,7 +9,7 @@ use parent 'Mail::Transport::Send';
 use strict;
 use warnings;
 
-use Log::Report   'mail-transport';
+use Log::Report   'mail-transport', import => [ qw/__x error fault warning/ ];
 
 use Scalar::Util  qw/blessed/;
 
@@ -36,6 +36,7 @@ If you have Exim installed in a non-standard location, you will need to
 specify the path, using M<new(proxy)>.
 
 =default via C<'exim'>
+=error cannot find binary for exim.
 =cut
 
 sub init($)
@@ -43,10 +44,9 @@ sub init($)
 	$args->{via} = 'exim';
 	$self->SUPER::init($args);
 
-	$self->{MTS_program} = $args->{proxy}
-		|| ( -x '/usr/sbin/exim4' ? '/usr/sbin/exim4' : undef)
-		|| $self->findBinary('exim', '/usr/exim/bin')
-		or return;
+	$self->{MTS_program} = $args->{proxy} ||
+		( -x '/usr/sbin/exim4' ? '/usr/sbin/exim4' : undef) || $self->findBinary('exim', '/usr/exim/bin')
+		or error __x"cannot find binary for exim.";
 
 	$self;
 }

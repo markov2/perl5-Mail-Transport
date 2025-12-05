@@ -9,7 +9,7 @@ use parent 'Mail::Transport';
 use strict;
 use warnings;
 
-use Log::Report   'mail-transport';
+use Log::Report   'mail-transport', import => [ qw/__x error warning/ ];
 
 use File::Spec    ();
 use Errno         'EAGAIN';
@@ -103,17 +103,13 @@ messages.  It returns true when the transmission was successfully completed.
 Overrules the destination(s) of the message, which is by default taken
 from the (Resent-)To, (Resent-)Cc, and (Resent-)Bcc.
 
-=error unable to coerce a {type} object into a Mail::Message.
 =cut
 
 sub send($@)
 {	my ($self, $message, %args) = @_;
 
-	unless($message->isa('Mail::Message'))  # avoid rebless.
-	{	$message = Mail::Message->coerce($message);
-		defined $message
-			or error __x"unable to coerce a {type} object into a Mail::Message.", type => ref $message;
-	}
+	$message = Mail::Message->coerce($message)
+		unless $message->isa('Mail::Message');
 
 	$self->trySend($message, %args)
 		and return 1;

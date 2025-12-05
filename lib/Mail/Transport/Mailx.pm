@@ -9,7 +9,7 @@ use parent 'Mail::Transport::Send';
 use strict;
 use warnings;
 
-use Log::Report   'mail-transport';
+use Log::Report   'mail-transport', import => [ qw/__x fault error/ ];
 
 #--------------------
 =chapter NAME
@@ -54,6 +54,7 @@ destinations and such.  This field is autodetect, however on some
 platforms both versions of C<mail> can live (like various Linux
 distributions).
 
+=error cannot find binary of mailx.
 =cut
 
 sub init($)
@@ -62,8 +63,8 @@ sub init($)
 
 	$self->SUPER::init($args) or return;
 
-	$self->{MTM_program} = $args->{proxy} || $self->findBinary('mailx') || $self->findBinary('Mail')
-		|| $self->findBinary('mail') or return;
+	$self->{MTM_program} = $args->{proxy} || $self->findBinary('mailx') || $self->findBinary('Mail') || $self->findBinary('mail')
+		or error __x"cannot find binary of mailx.";
 
 	$self->{MTM_style} = $args->{style} // ( $^O =~ m/linux|freebsd|bsdos|netbsd|openbsd/ ? 'BSD' : 'RFC822' );
 	$self;
