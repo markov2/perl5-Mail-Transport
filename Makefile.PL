@@ -5,7 +5,7 @@ require 5.016;
 use IO::Handle;
 
 # Use command 'oodist' to produce your whole software release.
-my $VERSION = '4.000';
+my $VERSION = '4.00';
 my $git      = "https://github.com/markov2/perl5-Mail-Transport";
 my $publish  = "../public_html/mail-transport";
 my $homepage = "http://perl.overmeer.net/CPAN/";
