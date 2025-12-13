@@ -9,7 +9,7 @@ use parent 'Mail::Transport::Send';
 use strict;
 use warnings;
 
-use Log::Report   'mail-transport', import => [ qw/__x error notice warning/ ];
+use Log::Report   'mail-transport', import => [ qw/__x error notice trace warning/ ];
 
 use Net::SMTP     ();
 
@@ -247,6 +247,8 @@ sub Net::SMTP::datafast($)
 Creates the connection to the SMTP server.  When more than one hostname
 was specified, the first which accepts a connection is taken.  An
 IO::Socket::INET object is returned.
+
+=error authentication for $host failed.
 =cut
 
 sub contactAnyServer()
@@ -261,14 +263,14 @@ sub contactAnyServer()
 	{	my $server = $self->tryConnectTo($host, Port => $port, %$opts, Timeout => $timeout)
 			or next;
 
-		$self->log(PROGRESS => "Opened SMTP connection to $host.");
+		trace "opened SMTP connection to $host.";
 
 		if(defined $username)
 		{	unless($server->auth($username, $password))
-			{	$self->log(ERROR => "Authentication failed.");
+			{	error __x"authentication for {host} failed.", host => $host;
 				return undef;
 			}
-			$self->log(PROGRESS => "$host: Authentication succeeded.");
+			trace "$host: Authentication succeeded.";
 		}
 
 		return $server;
