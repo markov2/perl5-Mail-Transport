@@ -124,7 +124,7 @@ Success and quit success are booleans.  The error code and -text are
 protocol specific codes and texts.  The location tells where the
 problem occurred.
 
-[3.003] the 'accept' returns the message of the L<dataend()> instruction.
+The 'accept' returns the message of the L<dataend()> instruction.
 Some servers may provide useful information in there, like an internal
 message registration id.  For example, postfix may return "2.0.0 Ok:
 queued as 303EA380EE".  You can only use this parameter when running
